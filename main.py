@@ -144,6 +144,36 @@ print(f"Missing values AFTER cleaning:")
 print(df.isnull().sum())
 print("=" * 80)
 
+# ============================================================================
+# FEATURE ENGINEERING - Create FamilySize
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("FEATURE ENGINEERING")
+print("=" * 80)
+
+# Create FamilySize feature (combines SibSp + Parch + 1 for the passenger)
+print("\nCreating FamilySize feature...")
+df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
+
+print(f"✓ FamilySize feature created")
+print(f"  Family size distribution:")
+family_size_dist = df['FamilySize'].value_counts().sort_index()
+for size, count in family_size_dist.items():
+    print(f"    Size {size}: {count} passengers ({count/len(df)*100:.1f}%)")
+
+print(f"\n  Average family size: {df['FamilySize'].mean():.2f}")
+print(f"  Family size range: {df['FamilySize'].min()} - {df['FamilySize'].max()}")
+
+# Analyze survival by family size
+print("\n  Survival rate by family size:")
+for size in sorted(df['FamilySize'].unique()):
+    survival_rate = df[df['FamilySize'] == size]['Survived'].mean() * 100
+    count = len(df[df['FamilySize'] == size])
+    print(f"    Size {size}: {survival_rate:.1f}% (n={count})")
+
+print("\n" + "=" * 80)
+
 # Create visualizations
 fig = plt.figure(figsize=(16, 12))
 
@@ -224,9 +254,9 @@ df_corr['Sex_numeric'] = df_corr['Sex'].map({'male': 0, 'female': 1})
 embarked_mapping = {'S': 0, 'C': 1, 'Q': 2}
 df_corr['Embarked_numeric'] = df_corr['Embarked'].map(embarked_mapping)
 
-# Select numerical features for correlation
-numerical_features = ['Survived', 'Pclass', 'Sex_numeric', 'Age', 'SibSp', 
-                      'Parch', 'Fare', 'Embarked_numeric']
+# Select numerical features for correlation (using FamilySize instead of SibSp and Parch)
+numerical_features = ['Survived', 'Pclass', 'Sex_numeric', 'Age', 'FamilySize', 
+                      'Fare', 'Embarked_numeric']
 
 # Create correlation matrix
 correlation_data = df_corr[numerical_features].corr()
@@ -307,8 +337,8 @@ print("=" * 80)
 # Prepare features for classification
 print("\nPreparing features for classification...")
 
-# Select relevant features
-feature_columns = ['Pclass', 'Sex_numeric', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked_numeric']
+# Select relevant features (using FamilySize instead of SibSp and Parch)
+feature_columns = ['Pclass', 'Sex_numeric', 'Age', 'FamilySize', 'Fare', 'Embarked_numeric']
 
 X = df_corr[feature_columns]
 y = df_corr['Survived']
